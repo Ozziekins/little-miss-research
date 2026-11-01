@@ -1,0 +1,87 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import PaperOfTheDay from '@/components/PaperOfTheDay.astro';
+import Breadcrumbs from '@/components/Breadcrumbs.astro';
+import { allPapers } from '@/lib/papers';
+---
+
+<BaseLayout
+  title="Research paper of the day"
+  description="Every day, one hilariously real research paper explained in plain English. Same paper for everyone, worldwide. Come back tomorrow for another."
+>
+  <div class="container">
+    <header class="page-header">
+      <Breadcrumbs items={[{ name: 'Home', href: '/' }, { name: 'Paper of the day' }]} />
+      <h1 class="headline">Today’s paper</h1>
+      <p class="lede">
+        One paper a day, the same for everyone on Earth. It changes at midnight (UTC), and all {allPapers.length} get their
+        turn before any repeat.
+      </p>
+    </header>
+
+    <PaperOfTheDay note="come back tomorrow for another!" />
+
+    <section class="section" aria-labelledby="week-heading">
+      <h2 id="week-heading" class="section-title"><span>Earlier this week</span></h2>
+      <ol class="week" data-week></ol>
+      <noscript><p>Turn on JavaScript to see the previous days’ papers.</p></noscript>
+    </section>
+  </div>
+</BaseLayout>
+
+<script>
+  import { pickForDay, formatIssueDate } from '@/lib/daily';
+  import { escapeHtml } from '@/scripts/render';
+  import type { PaperIndexEntry } from '@/lib/search';
+
+  document.addEventListener('astro:page-load', () => {
+    const list = document.querySelector<HTMLOListElement>('[data-week]');
+    const data = document.getElementById('potd-data');
+    if (list && data) {
+      const { index } = JSON.parse(data.textContent ?? '{}') as { index: PaperIndexEntry[] };
+      const today = Date.now();
+      list.innerHTML = [1, 2, 3, 4, 5, 6]
+        .map((daysAgo) => {
+          const date = new Date(today - daysAgo * 86_400_000);
+          const p = pickForDay(index, date);
+          return `<li><time class="kicker" datetime="${date.toISOString().slice(0, 10)}">${formatIssueDate(date)}</time>
+            <a href="/papers/${p.slug}/">${escapeHtml(p.title)}</a></li>`;
+        })
+        .join('');
+    }
+  });
+</script>
+
+<style>
+  .section {
+    max-width: 46rem;
+    margin-inline: auto;
+  }
+  .week {
+    padding: 0;
+    list-style: none;
+  }
+  .week :global(li) {
+    display: grid;
+    grid-template-columns: 13rem 1fr;
+    align-items: baseline;
+    gap: var(--space-4);
+    padding-block: var(--space-4);
+    border-block-end: var(--border-hair);
+    font-family: var(--font-display);
+    font-variation-settings: var(--display-soft);
+    font-size: var(--text-lg);
+  }
+  .week :global(a) {
+    text-decoration: none;
+  }
+  .week :global(a:hover) {
+    text-decoration: underline;
+  }
+  @media (max-width: 40rem) {
+    .week :global(li) {
+      grid-template-columns: 1fr;
+      gap: var(--space-1);
+    }
+  }
+</style>

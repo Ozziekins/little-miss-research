@@ -1,0 +1,19 @@
+---
+import { allTopics, topicPath } from '@/lib/papers';
+const year = new Date().getFullYear();
+---
+
+<footer class="site-footer">
+  <div class="container">
+    <nav aria-label="Footer">
+      <ul class="site-footer__links">
+        <li><a href="/papers/">All papers</a></li>
+        <li><a href="/ig-nobel/">Ig Nobel winners</a></li>
+        {allTopics.map((t) => <li><a href={topicPath(t)}>{t.name}</a></li>)}
+        <li><a href="/about/">About</a></li>
+        <li><a href="/rss.xml">RSS</a></li>
+      </ul>
+    </nav>
+    <p class="site-footer__colophon">© {year} Little Miss Research · real papers, tiny brains welcome ♡</p>
+  </div>
+</footer>

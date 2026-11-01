@@ -1,0 +1,135 @@
+/* ==========================================================================
+   Little Miss Research · Design tokens
+   Monochrome and minimal: every colour is a shade between ink and paper,
+   structure comes from whitespace and hairline rules, not boxes.
+   Components must use these tokens, never raw values.
+   ========================================================================== */
+
+:root {
+  /* ── Colour ─────────────────────────────────────────────────────────── */
+  /* Warm newsprint greys */
+  --gray-0: #fdfbf7;
+  --gray-50: #f5f0e6;
+  --gray-100: #ede6d8;
+  --gray-200: #e3dbcb;
+  --gray-300: #cfc5b2;
+  --gray-400: #a39a88;
+  --gray-500: #7d7567;
+  --gray-600: #5e574c;
+  --gray-700: #403b33;
+  --gray-800: #28251f;
+  --gray-900: #1a1814;
+
+  --color-paper: var(--gray-50);
+  --color-paper-raised: var(--gray-0);
+  --color-paper-sunken: var(--gray-100);
+  --color-ink: var(--gray-900);
+  --color-ink-soft: var(--gray-700);
+  --color-ink-muted: var(--gray-600); /* ≥ 4.5:1 on paper */
+  --color-rule: var(--gray-300);
+  --color-rule-strong: var(--gray-900);
+  --color-highlight: var(--gray-200); /* "highlighter pen", but grey */
+  --color-inverse-ink: var(--gray-50);
+  --color-inverse-paper: var(--gray-900);
+
+  /* Pastel journal accents: highlighters, doodle fills, tape. Used sparingly. */
+  --pastel-yellow: #fff1a1;
+  --pastel-pink: #ffd6e0;
+  --pastel-mint: #cdeedb;
+  --pastel-sky: #d2e5fa;
+  --pastel-lilac: #e3daf8;
+  --pastel-ink: #8b78c9; /* wavy "new word" underline */
+  --pastel-peach: #ffdcbc;
+  --pastel-coral: #ffcabe;
+
+  /* Newspaper accents (from the tiny-newspaper references) */
+  --accent-mustard: #f2cd5c;
+  --accent-mustard-soft: #f7e3a3;
+  --accent-red: #d4432c;
+  --ruled-line: rgb(150 125 80 / 0.09);
+
+  /* One pastel per topic, for pills */
+  --topic-medicine: var(--pastel-pink);
+  --topic-physics: var(--pastel-sky);
+  --topic-animals: var(--pastel-mint);
+  --topic-psychology: var(--pastel-lilac);
+  --topic-tech: var(--pastel-yellow);
+  --topic-food: var(--pastel-peach);
+  --topic-pop-culture: var(--pastel-coral);
+
+  /* ── Typography ─────────────────────────────────────────────────────── */
+  /* Display & UI: a soft, slightly wonky serif. The voice of the magazine. */
+  --font-display: 'Fraunces Variable', 'Fraunces', 'Iowan Old Style', Georgia, serif;
+  /* Reading text */
+  --font-serif: 'Newsreader', 'Iowan Old Style', 'Palatino Linotype', Georgia, serif;
+  /* Citations & years only: the one geeky accent */
+  --font-mono: 'IBM Plex Mono', ui-monospace, 'SFMono-Regular', Menlo, monospace;
+  /* Logo & margin notes */
+  --font-hand: 'Gaegu', 'Bradley Hand', 'Segoe Print', cursive;
+  /* Fraunces character: fully soft corners, wonky italics */
+  --display-soft: 'SOFT' 100, 'WONK' 1;
+
+  /* Fluid type scale: deliberately small and calm */
+  --text-xs: 0.75rem;
+  --text-sm: 0.875rem;
+  --text-base: clamp(1rem, 0.98rem + 0.1vw, 1.0625rem);
+  --text-lg: clamp(1.125rem, 1.08rem + 0.2vw, 1.25rem);
+  --text-xl: clamp(1.3rem, 1.2rem + 0.4vw, 1.5rem);
+  --text-2xl: clamp(1.55rem, 1.4rem + 0.7vw, 1.9rem);
+  --text-3xl: clamp(1.85rem, 1.6rem + 1.2vw, 2.5rem);
+  --text-display: clamp(2.2rem, 1.7rem + 2.6vw, 3.6rem);
+  --text-hand: clamp(1.25rem, 1.2rem + 0.3vw, 1.45rem);
+
+  --leading-tight: 1.15;
+  --leading-snug: 1.3;
+  --leading-body: 1.6;
+  --tracking-mono: 0.04em;
+  --tracking-caps: 0.12em;
+
+  /* ── Space (4px base) ───────────────────────────────────────────────── */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.5rem;
+  --space-6: 2rem;
+  --space-7: 3rem;
+  --space-8: 4rem;
+  --space-9: 6rem;
+
+  /* ── Layout ─────────────────────────────────────────────────────────── */
+  --measure: 65ch;
+  --container: 64rem;
+  --container-narrow: 46rem;
+  --gutter: clamp(1rem, 4vw, 2rem);
+
+  /* ── Lines, corners, shadows ────────────────────────────────────────── */
+  --border-hair: 1px solid var(--color-rule);
+  --border-ink: 1px solid var(--color-rule-strong);
+  --border-heavy: 3px solid var(--color-rule-strong);
+  --rule-double: 3px double var(--color-rule-strong);
+  --radius-sm: 2px;
+  --radius-md: 6px;
+  --radius-pill: 999px;
+  --shadow-ink: 2px 2px 0 var(--color-ink);
+  --shadow-soft: 0 2px 6px rgb(40 30 10 / 0.14);
+  --frame-inset: 12px;
+
+  /* ── Motion ─────────────────────────────────────────────────────────── */
+  --ease-out: cubic-bezier(0.2, 0.7, 0.2, 1);
+  --duration-fast: 120ms;
+  --duration-base: 220ms;
+
+  --focus-ring: 2px dashed var(--color-ink);
+  --focus-offset: 3px;
+
+  /* Always paper: the site is a printed page, so no dark mode. */
+  color-scheme: light;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --duration-fast: 0ms;
+    --duration-base: 0ms;
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "name": "Little Miss Research",
+  "short_name": "LM Research",
+  "description": "The funniest real research papers, explained for normal humans.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#fafaf7",
+  "theme_color": "#121211",
+  "icons": [
+    { "src": "/favicon.svg", "sizes": "any", "type": "image/svg+xml" },
+    { "src": "/apple-touch-icon.png", "sizes": "180x180", "type": "image/png" }
+  ]
+}

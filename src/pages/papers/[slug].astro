@@ -1,0 +1,394 @@
+---
+import type { GetStaticPaths } from 'astro';
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import Breadcrumbs from '@/components/Breadcrumbs.astro';
+import SillyMeter from '@/components/SillyMeter.astro';
+import IgNobelStamp from '@/components/IgNobelStamp.astro';
+import ShareButton from '@/components/ShareButton.astro';
+import Doodle from '@/components/Doodle.astro';
+import type { Paper } from '@/data/types';
+import { allPapers, getAnnotation, primaryTopic, relatedPapers, paperSourceUrl, paperPath, topicPath } from '@/lib/papers';
+import { paperJsonLd, breadcrumbJsonLd } from '@/lib/seo';
+import { titleSize } from '@/lib/format';
+import { annotateSummary } from '@/lib/annotate';
+import { doodlesFor } from '@/lib/doodles';
+
+export const getStaticPaths = (() =>
+  allPapers.map((paper) => ({ params: { slug: paper.slug }, props: { paper } }))) satisfies GetStaticPaths;
+
+interface Props {
+  paper: Paper;
+}
+const { paper } = Astro.props;
+const topic = primaryTopic(paper);
+const related = relatedPapers(paper, 3);
+const note = getAnnotation(paper.slug);
+const paragraphs = annotateSummary(paper.summary, note);
+// Lead search snippets with the question, unless the tl;dr already asks it.
+const leadQuestion =
+  note?.question && !paper.tldr.toLowerCase().includes(note.question.toLowerCase().replace(/\?$/, '')) ? `${note.question} ` : '';
+const [d1, d2, d3] = doodlesFor(paper.slug, paper.topics, 3);
+const tints = ['sky', 'pink', 'mint', 'lilac', 'yellow'] as const;
+const site = Astro.site!;
+const url = (path: string) => new URL(path, site).href;
+const crumbs = [
+  { name: 'Home', href: '/' },
+  { name: topic.name, href: topicPath(topic) },
+  { name: paper.title.length > 40 ? paper.title.slice(0, 38) + '…' : paper.title },
+];
+---
+
+<BaseLayout
+  title={paper.title}
+  description={`${leadQuestion}${paper.tldr} ${paper.authors} (${paper.year}), ${paper.journal}, explained in plain English.`}
+  type="article"
+  jsonLd={[
+    paperJsonLd(paper, url(paperPath(paper))),
+    breadcrumbJsonLd([
+      { name: 'Home', url: url('/') },
+      { name: topic.name, url: url(topicPath(topic)) },
+      { name: paper.title, url: url(paperPath(paper)) },
+    ]),
+  ]}
+>
+  <article class="journal">
+    <div class="journal__crumbs"><Breadcrumbs items={crumbs} /></div>
+
+    <header class="journal__header">
+      <span class="tape" aria-hidden="true"></span>
+      {note && <p class="journal__question">{note.question}</p>}
+      <h1 class:list={['journal__title', `journal__title--${titleSize(paper.title)}`]}>{paper.title}</h1>
+      <p class="journal__standfirst">{paper.tldr}</p>
+      <p class="journal__byline">{paper.authors} · <em>{paper.journal}</em>, {paper.year}</p>
+      {paper.igNobel && <div class="journal__stamp"><IgNobelStamp {...paper.igNobel} small /></div>}
+    </header>
+
+    <div class="journal__body">
+      {d1 && <Doodle name={d1} tint={tints[0]} size={64} rotate={-10} class="journal__doodle journal__doodle--a" />}
+      {d2 && <Doodle name={d2} tint={tints[1]} size={56} rotate={8} class="journal__doodle journal__doodle--b" />}
+      {d3 && <Doodle name={d3} tint={tints[2]} size={60} rotate={-4} class="journal__doodle journal__doodle--c" />}
+
+      {
+        paragraphs.map((para, i) => (
+          <div class="journal__row">
+            <p class:list={['journal__para', { 'journal__para--first': i === 0 }]} set:html={para.html} />
+            <aside class="journal__margin" aria-label="Margin notes">
+              {i === 0 && note?.scribble && (
+                <p class="scribble">
+                  <svg class="scribble__arrow" viewBox="0 0 60 30" aria-hidden="true">
+                    <path d="M58 6 Q30 2 8 20 M8 20 l10 -2 M8 20 l2 -10" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                  </svg>
+                  {note.scribble}
+                </p>
+              )}
+              {para.vocab.map((v) => (
+                <p class="newword">
+                  <span class="newword__label">new word!</span>
+                  <strong>{v.word.toLowerCase()}</strong>: {v.meaning}
+                </p>
+              ))}
+            </aside>
+          </div>
+        ))
+      }
+
+      <figure class="verdict">
+        <figcaption class="verdict__label">the verdict</figcaption>
+        <blockquote><p><span class="hl hl--pink">{paper.verdict}</span></p></blockquote>
+      </figure>
+
+      <footer class="journal__footer">
+        <p class="journal__facts">
+          <span>Silliness <SillyMeter level={paper.silliness} compact showLabel={false} /></span>
+          {paper.igNobel && <span>Ig Nobel Prize, {paper.igNobel.category} {paper.igNobel.year}</span>}
+          <span>Filed under <a href={topicPath(topic)}>{topic.name}</a></span>
+        </p>
+        <div class="journal__actions no-print">
+          <a class="btn" href={paperSourceUrl(paper)} rel="noopener" target="_blank">Read the original ↗</a>
+          <ShareButton title={paper.title} text={paper.tldr} url={url(paperPath(paper))} label="Share" />
+          <a class="arrow-link" href="/random/" rel="nofollow">another one, please</a>
+        </div>
+      </footer>
+    </div>
+
+    {
+      related.length > 0 && (
+        <nav class="journal__next" aria-labelledby="next-heading">
+          <h2 id="next-heading" class="journal__next-title">You might also like…</h2>
+          <ul>
+            {related.map((p) => (
+              <li>
+                <a href={paperPath(p)}>{getAnnotation(p.slug)?.question ?? p.title}</a>
+              </li>
+            ))}
+          </ul>
+        </nav>
+      )
+    }
+  </article>
+</BaseLayout>
+
+<style>
+  .journal {
+    --col: 36rem;
+    --margin: 12rem;
+    width: min(100% - 2 * var(--gutter), calc(var(--col) + 2 * var(--margin) + 4rem));
+    margin-inline: auto;
+  }
+  .journal__crumbs,
+  .journal__header,
+  .journal__next {
+    max-width: var(--col);
+    margin-inline: auto;
+  }
+  .journal__crumbs {
+    padding-block-start: var(--space-4);
+  }
+
+  /* Header */
+  .journal__header {
+    position: relative;
+    padding-block: var(--space-7) var(--space-6);
+  }
+  .tape {
+    position: absolute;
+    top: var(--space-5);
+    left: -1.5rem;
+    width: 6.5rem;
+    height: 1.6rem;
+    background: color-mix(in srgb, var(--accent-mustard) 55%, transparent);
+    transform: rotate(-8deg);
+    border-radius: 2px;
+    opacity: 0.9;
+  }
+  .journal__question {
+    font-family: var(--font-hand);
+    font-weight: 700;
+    font-size: var(--text-hand);
+    color: var(--color-ink-soft);
+    transform: rotate(-1.5deg);
+  }
+  .journal__title {
+    margin-block: var(--space-3) var(--space-4);
+    font-size: var(--text-3xl);
+    font-weight: 650;
+    font-variation-settings: 'SOFT' 50, 'WONK' 0;
+    line-height: 1.08;
+  }
+  .journal__title--long {
+    font-size: var(--text-2xl);
+  }
+  .journal__title--very-long {
+    font-size: var(--text-xl);
+    line-height: 1.2;
+  }
+  .journal__standfirst {
+    font-size: var(--text-lg);
+    font-style: italic;
+    color: var(--color-ink-soft);
+  }
+  .journal__byline {
+    margin-block-start: var(--space-4);
+    padding-block-end: var(--space-5);
+    border-block-end: var(--border-hair);
+    font-size: var(--text-sm);
+    color: var(--color-ink-muted);
+  }
+  .journal__stamp {
+    position: absolute;
+    top: var(--space-6);
+    right: -1rem;
+  }
+
+  /* Body: text column + margin column */
+  .journal__body {
+    position: relative;
+    padding-block-start: var(--space-5);
+  }
+  .journal__row {
+    display: grid;
+    grid-template-columns: var(--margin) minmax(0, var(--col)) var(--margin);
+    column-gap: 2rem;
+    justify-content: center;
+    margin-block-end: var(--space-5);
+  }
+  .journal__para {
+    grid-column: 2;
+    font-size: var(--text-base);
+    line-height: 1.75;
+  }
+  .journal__para--first::first-letter {
+    float: left;
+    font-family: var(--font-display);
+    font-variation-settings: var(--display-soft);
+    font-size: 3.3em;
+    line-height: 0.85;
+    padding: 0.08em 0.1em 0 0;
+  }
+  .journal__margin {
+    grid-column: 3;
+    display: grid;
+    align-content: start;
+    gap: var(--space-4);
+    /* Float beside the paragraph without stretching the row. */
+    height: 0;
+    overflow: visible;
+  }
+  .scribble {
+    position: relative;
+    font-family: var(--font-hand);
+    font-weight: 700;
+    font-size: 1.3rem;
+    line-height: 1;
+    color: var(--color-ink-soft);
+    transform: rotate(-4deg);
+    padding-block-start: 1.6rem;
+  }
+  .scribble__arrow {
+    position: absolute;
+    top: 0;
+    left: -0.5rem;
+    width: 3rem;
+    height: 1.5rem;
+    color: var(--color-ink-muted);
+  }
+  .newword {
+    padding: var(--space-2) var(--space-3);
+    background: color-mix(in srgb, var(--pastel-lilac) 55%, transparent);
+    border-radius: 4px 10px 6px 12px;
+    font-size: var(--text-xs);
+    line-height: 1.45;
+    color: var(--color-ink-soft);
+    transform: rotate(1.5deg);
+  }
+  .newword__label {
+    display: block;
+    font-family: var(--font-hand);
+    font-weight: 700;
+    font-size: 1.05rem;
+    color: var(--color-ink);
+  }
+  .newword strong {
+    font-weight: 600;
+  }
+  .journal__body :global(.journal__doodle) {
+    position: absolute;
+    pointer-events: none;
+  }
+  .journal__body :global(.journal__doodle--a) { left: calc(50% - var(--col) / 2 - 9rem); top: 1rem; }
+  .journal__body :global(.journal__doodle--b) { left: calc(50% - var(--col) / 2 - 7rem); top: 45%; }
+  .journal__body :global(.journal__doodle--c) { right: calc(50% - var(--col) / 2 - 8rem); bottom: 6rem; }
+
+  /* Verdict */
+  .verdict {
+    max-width: var(--col);
+    margin: var(--space-7) auto;
+    text-align: center;
+  }
+  .verdict__label {
+    font-family: var(--font-display);
+    font-style: italic;
+    font-size: var(--text-sm);
+    color: var(--color-ink-muted);
+  }
+  .verdict blockquote p {
+    margin-block-start: var(--space-2);
+    font-family: var(--font-hand);
+    font-weight: 700;
+    font-size: clamp(1.6rem, 1.4rem + 1vw, 2.1rem);
+    line-height: 1.3;
+  }
+
+  /* Footer of the article */
+  .journal__footer {
+    max-width: var(--col);
+    margin-inline: auto;
+    padding-block-start: var(--space-5);
+    border-block-start: var(--border-hair);
+  }
+  .journal__facts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2) var(--space-5);
+    font-size: var(--text-sm);
+    color: var(--color-ink-muted);
+  }
+  .journal__facts span {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+  }
+  .journal__actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-3);
+    margin-block-start: var(--space-5);
+  }
+
+  /* Related */
+  .journal__next {
+    margin-block-start: var(--space-8);
+  }
+  .journal__next-title {
+    font-family: var(--font-hand);
+    font-weight: 700;
+    font-size: var(--text-hand);
+  }
+  .journal__next ul {
+    margin-block-start: var(--space-3);
+    padding: 0;
+    list-style: none;
+  }
+  .journal__next li {
+    padding-block: var(--space-3);
+    border-block-start: var(--border-hair);
+  }
+  .journal__next a {
+    font-family: var(--font-display);
+    font-variation-settings: var(--display-soft);
+    font-size: var(--text-lg);
+    text-decoration: none;
+  }
+  .journal__next a:hover {
+    text-decoration: underline wavy var(--pastel-ink) 1.5px;
+    text-underline-offset: 0.3em;
+  }
+
+  /* Narrow screens: margin notes tuck under their paragraph, doodles hide */
+  @media (max-width: 64rem) {
+    .journal__row {
+      grid-template-columns: minmax(0, var(--col));
+    }
+    .journal__para,
+    .journal__margin {
+      grid-column: 1;
+    }
+    .journal__margin {
+      grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+      margin-block-start: var(--space-3);
+      height: auto;
+    }
+    .journal__margin:empty {
+      display: none;
+    }
+    .scribble {
+      padding-block-start: 0;
+      padding-inline-start: 2.6rem;
+    }
+    .scribble__arrow {
+      top: -0.2rem;
+      transform: scaleY(-1) rotate(30deg);
+    }
+    .journal__body :global(.journal__doodle) {
+      display: none;
+    }
+    .journal__stamp {
+      right: 0;
+      top: var(--space-4);
+    }
+    .tape {
+      left: -0.5rem;
+    }
+  }
+</style>

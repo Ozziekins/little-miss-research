@@ -1,0 +1,25 @@
+---
+import type { Topic } from '@/data/types';
+import { topicPath } from '@/lib/papers';
+interface Props {
+  topic: Topic;
+  active?: boolean;
+  small?: boolean;
+  /** Show the element symbol and paper count. */
+  count?: number;
+  /** Override the link target (e.g. an in-page anchor). */
+  href?: string;
+}
+const { topic, active = false, small = false, count, href } = Astro.props;
+---
+
+<a
+  href={href ?? topicPath(topic)}
+  class:list={['pill', { 'pill--sm': small, 'is-active': active }]}
+  data-topic={topic.slug}
+  aria-current={active ? 'page' : undefined}
+>
+  {count !== undefined && <span class="pill__symbol" aria-hidden="true">{topic.symbol}</span>}
+  {topic.name}
+  {count !== undefined && <span class="pill__symbol">{count}</span>}
+</a>

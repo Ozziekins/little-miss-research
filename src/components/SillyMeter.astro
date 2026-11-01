@@ -1,0 +1,18 @@
+---
+interface Props {
+  level: number;
+  compact?: boolean;
+  /** Hide the "Silliness" label when the context already provides one. */
+  showLabel?: boolean;
+}
+const { level, compact = false, showLabel = true } = Astro.props;
+const labels = ['', 'Mildly amusing', 'Giggle-worthy', 'Chuckle-inducing', 'Belly laughs', 'Pure delight'];
+---
+
+<span class:list={['silly-meter', { 'silly-meter--compact': compact }]} title={`Silliness: ${level}/5`}>
+  {showLabel && <span class="silly-meter__label">Silliness</span>}
+  <span class="silly-meter__dots" role="img" aria-label={`Silliness ${level} out of 5: ${labels[level]}`}>
+    {[1, 2, 3, 4, 5].map((i) => <span class:list={['silly-meter__dot', { 'is-on': i <= level }]} />)}
+  </span>
+  {!compact && <span class="silly-meter__text">{labels[level]}</span>}
+</span>

@@ -1,0 +1,27 @@
+---
+import type { Paper } from '@/data/types';
+import { getAnnotation, getTopic, paperPath } from '@/lib/papers';
+
+interface Props {
+  paper: Paper;
+  headingLevel?: 'h2' | 'h3';
+  /** Leave out this topic's pill (e.g. when listing inside that topic). */
+  hideTopic?: string;
+}
+const { paper, headingLevel: H = 'h3', hideTopic } = Astro.props;
+const topics = paper.topics.filter((t) => t !== hideTopic).map((t) => getTopic(t)!);
+const question = getAnnotation(paper.slug)?.question ?? paper.title;
+---
+
+<article class="entry">
+  {
+    (topics.length > 0 || paper.igNobel) && (
+      <p class="entry__kicker">
+        {topics.map((t) => <span class="pill pill--sm" data-topic={t.slug}>{t.name}</span>)}
+        {paper.igNobel && <span class="entry__ig">✦ Ig Nobel {paper.igNobel.year}</span>}
+      </p>
+    )
+  }
+  <H class="entry__title"><a href={paperPath(paper)} class="entry__link">{question}</a></H>
+  <p class="entry__paper">{paper.title} <span class="entry__year">({paper.year})</span></p>
+</article>

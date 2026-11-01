@@ -1,0 +1,38 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import SearchForm from '@/components/SearchForm.astro';
+import Button from '@/components/Button.astro';
+---
+
+<BaseLayout title="404: Null result" description="This page could not be found." noindex>
+  <div class="container--narrow notfound">
+    <p class="kicker">Error 404 · p = 1.00</p>
+    <h1 class="display">Null result.</h1>
+    <p class="lede">We looked very carefully and found no evidence this page exists. Like the tortoises who politely declined to yawn.</p>
+    <div class="notfound__search"><SearchForm id="nf-search" /></div>
+    <div class="cluster notfound__actions">
+      <Button href="/">Back to the front page</Button>
+      <Button href="/random/" variant="secondary" rel="nofollow">Surprise me</Button>
+    </div>
+  </div>
+</BaseLayout>
+
+<style>
+  .notfound {
+    padding-block: var(--space-9);
+    text-align: center;
+  }
+  .notfound > * + * {
+    margin-block-start: var(--space-5);
+  }
+  .notfound .lede {
+    margin-inline: auto;
+  }
+  .notfound__search {
+    max-width: 26rem;
+    margin-inline: auto;
+  }
+  .notfound__actions {
+    justify-content: center;
+  }
+</style>

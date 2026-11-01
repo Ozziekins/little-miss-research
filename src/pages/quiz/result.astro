@@ -1,0 +1,233 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import Logo from '@/components/Logo.astro';
+import { archetypes } from '@/data/quiz';
+import { allPapers } from '@/lib/papers';
+
+const papers = Object.fromEntries(
+  allPapers.map((p) => [
+    p.slug,
+    { title: p.title, citation: `${p.authors.split(',')[0]} et al. (${p.year}) · ${p.journal}`, verdict: p.verdict, tldr: p.tldr },
+  ]),
+);
+---
+
+<BaseLayout
+  title="My research paper personality"
+  description="I took the Little Miss Research personality test and found out which ridiculous real research paper I am. Which one are you?"
+  noindex
+>
+  <div class="container--narrow result">
+    <div class="certificate" data-certificate hidden>
+      <p class="kicker">Certificate of scientific personality</p>
+      <div class="certificate__logo"><Logo asLink={false} /></div>
+      <p class="certificate__small">This is to certify that</p>
+      <p class="certificate__name" data-name></p>
+      <p class="certificate__small">is, according to rigorous* science, the research paper:</p>
+      <h1 class="certificate__paper"><a data-paper-link></a></h1>
+      <p class="certificate__citation" data-citation></p>
+      <p class="certificate__tldr" data-tldr></p>
+      <div class="certificate__type">
+        <p class="kicker">Personality type</p>
+        <p class="certificate__archetype" data-archetype></p>
+        <p class="certificate__blurb" data-blurb></p>
+      </div>
+      <p class="certificate__foot">*not rigorous</p>
+      <span class="certificate__stamp" aria-hidden="true">Peer<br />reviewed<small>(by a cat)</small></span>
+    </div>
+
+    <div class="cluster result__actions" data-actions hidden>
+      <button type="button" class="btn" data-share-result>Share my result</button>
+      <button type="button" class="btn btn--secondary" data-download>Download as image ↓</button>
+      <a class="btn btn--secondary" data-read>Read my paper →</a>
+      <a class="btn btn--ghost" href="/quiz/">Take the test again</a>
+    </div>
+
+    <div class="result__missing" data-missing hidden>
+      <h1>Hmm, this result went missing from the lab.</h1>
+      <p class="lede">The link might be broken. Why not get your own?</p>
+      <p><a class="btn btn--lg" href="/quiz/">Take the personality test →</a></p>
+    </div>
+  </div>
+  <script type="application/json" id="result-data" set:html={JSON.stringify({ papers, archetypes })} />
+</BaseLayout>
+
+<script>
+  import { sanitizeName } from '@/lib/quiz';
+  import { shareOrCopy } from '@/scripts/share';
+  import { drawCertificate, downloadCanvas } from '@/scripts/certificate';
+
+  document.addEventListener('astro:page-load', () => {
+    const dataEl = document.getElementById('result-data');
+    if (!dataEl || dataEl.dataset.bound) return;
+    dataEl.dataset.bound = 'true';
+    type PaperLite = { title: string; citation: string; verdict: string; tldr: string };
+    const { papers, archetypes } = JSON.parse(dataEl.textContent!) as {
+      papers: Record<string, PaperLite>;
+      archetypes: Record<string, { title: string; blurb: string }>;
+    };
+    const $ = <T extends HTMLElement>(sel: string) => document.querySelector<T>(sel)!;
+    const params = new URLSearchParams(location.search);
+    const slug = params.get('p') ?? '';
+    const name = sanitizeName(params.get('n') ?? '');
+    const archetype = archetypes[params.get('t') ?? ''] ?? archetypes.cozy!;
+    const paper = papers[slug];
+
+    if (!paper) {
+      $('[data-missing]').hidden = false;
+    } else {
+      const displayName = name || 'An Anonymous Scientist';
+      $('[data-name]').textContent = displayName;
+      const link = $<HTMLAnchorElement>('[data-paper-link]');
+      link.textContent = paper.title;
+      link.href = `/papers/${slug}/`;
+      $('[data-citation]').textContent = paper.citation;
+      $('[data-tldr]').textContent = paper.tldr;
+      $('[data-archetype]').textContent = archetype.title;
+      $('[data-blurb]').textContent = archetype.blurb;
+      $<HTMLAnchorElement>('[data-read]').href = `/papers/${slug}/`;
+      $('[data-certificate]').hidden = false;
+      $('[data-actions]').hidden = false;
+      document.title = `${displayName} is “${paper.title}” · Little Miss Research`;
+
+      $('[data-share-result]').addEventListener('click', async (e) => {
+        const btn = e.currentTarget as HTMLButtonElement;
+        const res = await shareOrCopy({
+          title: 'Which ridiculous research paper are you?',
+          text: `${name ? name + ' is' : 'I am'} “${paper.title}”. Which research paper are you?`,
+          url: location.href,
+        });
+        if (res === 'copied') {
+          btn.textContent = 'Link copied ✓';
+          setTimeout(() => (btn.textContent = 'Share my result'), 2000);
+        }
+      });
+
+      $('[data-download]').addEventListener('click', async () => {
+        const canvas = await drawCertificate({
+          name,
+          paperTitle: paper.title,
+          citation: paper.citation,
+          archetype: archetype.title,
+          verdict: paper.verdict,
+          site: location.host,
+        });
+        downloadCanvas(canvas, `my-research-paper-${slug}.png`);
+      });
+    }
+  });
+</script>
+
+<style>
+  .result {
+    padding-block: var(--space-7) var(--space-8);
+  }
+  .certificate {
+    position: relative;
+    padding: clamp(var(--space-5), 5vw, var(--space-8));
+    background: var(--color-paper-raised);
+    border: 4px double var(--color-ink);
+    outline: 1px solid var(--color-ink);
+    outline-offset: -14px;
+    padding-block-end: calc(clamp(var(--space-5), 5vw, var(--space-8)) + 3rem);
+    text-align: center;
+  }
+  .certificate > * + * {
+    margin-block-start: var(--space-4);
+  }
+  .certificate__logo {
+    display: flex;
+    justify-content: center;
+    padding-block-end: var(--space-4);
+    border-block-end: var(--rule-double);
+  }
+  .certificate__small {
+    font-style: italic;
+    color: var(--color-ink-soft);
+  }
+  .certificate__name {
+    font-family: var(--font-hand);
+    font-weight: 700;
+    font-size: clamp(2.6rem, 2rem + 4vw, 4.4rem);
+    line-height: 1;
+    border-block-end: 2px solid var(--color-ink);
+    display: inline-block;
+    padding-inline: var(--space-5);
+  }
+  .certificate__paper {
+    font-size: var(--text-2xl);
+    line-height: 1.1;
+  }
+  .certificate__paper a {
+    text-decoration: none;
+  }
+  .certificate__citation {
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    color: var(--color-ink-muted);
+  }
+  .certificate__tldr {
+    max-width: 44ch;
+    margin-inline: auto;
+  }
+  .certificate__type {
+    margin-block-start: var(--space-6);
+    padding-block-start: var(--space-5);
+    border-block-start: var(--border-hair);
+  }
+  .certificate__archetype {
+    font-family: var(--font-hand);
+    font-weight: 700;
+    font-size: var(--text-3xl);
+    line-height: 1;
+  }
+  .certificate__blurb {
+    color: var(--color-ink-soft);
+    font-size: var(--text-sm);
+  }
+  .certificate__foot {
+    font-family: var(--font-hand);
+    font-size: 1.1rem;
+    text-align: left;
+    color: var(--color-ink-muted);
+  }
+  .certificate__stamp {
+    position: absolute;
+    right: 1.5rem;
+    bottom: 1.5rem;
+    display: grid;
+    place-content: center;
+    width: 6rem;
+    height: 6rem;
+    border: 3px double var(--color-ink);
+    border-radius: 50%;
+    transform: rotate(-14deg);
+    font-family: var(--font-display);
+    font-size: 0.75rem;
+    font-style: italic;
+    line-height: 1.2;
+  }
+  .certificate__stamp small {
+    font-size: 0.55rem;
+    text-transform: none;
+  }
+  @media (max-width: 36rem) {
+    .certificate {
+      padding-block-end: var(--space-5);
+    }
+    .certificate__stamp {
+      position: static;
+      margin: var(--space-4) auto 0;
+    }
+  }
+  .result__actions {
+    justify-content: center;
+    margin-block-start: var(--space-6);
+  }
+  .result__missing {
+    text-align: center;
+  }
+  .result__missing > * + * {
+    margin-block-start: var(--space-4);
+  }
+</style>

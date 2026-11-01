@@ -1,0 +1,75 @@
+---
+import type { GetStaticPaths } from 'astro';
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import PaperList from '@/components/PaperList.astro';
+import TopicChip from '@/components/TopicChip.astro';
+import Breadcrumbs from '@/components/Breadcrumbs.astro';
+import type { Topic } from '@/data/types';
+import { allTopics, papersByTopic, topicPath } from '@/lib/papers';
+import { breadcrumbJsonLd } from '@/lib/seo';
+
+export const getStaticPaths = (() =>
+  allTopics.map((topic) => ({ params: { topic: topic.slug }, props: { topic } }))) satisfies GetStaticPaths;
+
+interface Props {
+  topic: Topic;
+}
+const { topic } = Astro.props;
+const list = papersByTopic(topic.slug);
+const site = Astro.site!;
+---
+
+<BaseLayout
+  title={`Funny ${topic.name.toLowerCase()} research papers`}
+  description={topic.description}
+  jsonLd={[
+    breadcrumbJsonLd([
+      { name: 'Home', url: new URL('/', site).href },
+      { name: 'Topics', url: new URL('/topics/', site).href },
+      { name: topic.name, url: new URL(topicPath(topic), site).href },
+    ]),
+  ]}
+>
+  <div class="container">
+    <header class="page-header">
+      <Breadcrumbs items={[{ name: 'Home', href: '/' }, { name: 'Topics', href: '/topics/' }, { name: topic.name }]} />
+      <div class="element-tile topic__tile" aria-hidden="true">
+        <span class="element-tile__top"><span>{topic.number}</span><span>{list.length}</span></span>
+        <span class="element-tile__symbol">{topic.symbol}</span>
+        <span class="element-tile__name">{topic.name}</span>
+      </div>
+      <h1 class="headline">{topic.name}</h1>
+      <p class="topic__tagline">{topic.tagline}</p>
+    </header>
+    <PaperList papers={list} headingLevel="h2" columns hideTopic={topic.slug} />
+    <nav class="cluster topic-others" aria-label="Other topics">
+      <span class="kicker">Other topics:</span>
+      {allTopics.filter((t) => t.slug !== topic.slug).map((t) => <TopicChip topic={t} />)}
+    </nav>
+  </div>
+</BaseLayout>
+
+<style>
+  .topic__tile {
+    width: 5rem;
+    margin: var(--space-5) auto 0;
+    transform: rotate(-4deg);
+  }
+  .topic__tile :global(.element-tile__symbol) {
+    font-size: 1.5rem;
+  }
+  .topic__tile :global(.element-tile__name) {
+    display: none;
+  }
+  .topic__tagline {
+    font-family: var(--font-hand);
+    font-weight: 700;
+    font-size: var(--text-hand);
+    color: var(--color-ink-muted);
+  }
+  .topic-others {
+    --cluster-space: var(--space-2);
+    justify-content: center;
+    margin-block-start: var(--space-8);
+  }
+</style>

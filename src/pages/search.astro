@@ -1,0 +1,103 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import SearchForm from '@/components/SearchForm.astro';
+import Breadcrumbs from '@/components/Breadcrumbs.astro';
+import { allTopics } from '@/lib/papers';
+
+const topics = Object.fromEntries(allTopics.map((t) => [t.slug, { slug: t.slug, name: t.name, symbol: t.symbol }]));
+const suggestions = ['harry potter', 'cats', 'penguins', 'coffee', 'chocolate', 'chickens', 'christmas', 'music'];
+---
+
+<BaseLayout
+  title="Search the archive"
+  description="Search every hilarious research paper by keyword: cats, penguins, Harry Potter, parachutes, coffee and more."
+>
+  <div class="container">
+    <header class="page-header">
+      <Breadcrumbs items={[{ name: 'Home', href: '/' }, { name: 'Search' }]} />
+      <h1 class="headline">Search the collection</h1>
+      <div class="search-page__form"><SearchForm id="page-search" autofocus /></div>
+      <p class="cluster search-page__suggest">
+        <span class="kicker">Try:</span>
+        {suggestions.map((s) => <a class="tag" href={`/search/?q=${encodeURIComponent(s)}`}>{s}</a>)}
+      </p>
+    </header>
+    <p class="search-page__status" role="status" aria-live="polite" data-status></p>
+    <ol class="entries entries--grid" role="list" data-results></ol>
+    <noscript><p>Search needs JavaScript. You can still <a href="/papers/">browse all papers</a>.</p></noscript>
+  </div>
+  <script type="application/json" id="search-topics" set:html={JSON.stringify(topics)} />
+</BaseLayout>
+
+<script>
+  import { searchPapers, type PaperIndexEntry } from '@/lib/search';
+  import { paperEntry, escapeHtml } from '@/scripts/render';
+
+  document.addEventListener('astro:page-load', () => {
+    const input = document.getElementById('page-search') as HTMLInputElement | null;
+    if (!input || input.dataset.bound) return;
+    input.dataset.bound = 'true';
+    const results = document.querySelector<HTMLElement>('[data-results]')!;
+    const status = document.querySelector<HTMLElement>('[data-status]')!;
+    const topics = JSON.parse(document.getElementById('search-topics')?.textContent ?? '{}');
+    let index: PaperIndexEntry[] = [];
+
+    const run = (query: string) => {
+      const q = query.trim();
+      if (!q) {
+        results.innerHTML = '';
+        status.textContent = '';
+        return;
+      }
+      const hits = searchPapers(index, q);
+      status.innerHTML =
+        hits.length === 0
+          ? `No papers about “${escapeHtml(q)}” yet. Science is working on it ♡`
+          : `${hits.length} paper${hits.length === 1 ? '' : 's'} about “${escapeHtml(q)}”`;
+      results.innerHTML = hits.map((h) => `<li>${paperEntry(h, topics)}</li>`).join('');
+    };
+
+    const initial = new URLSearchParams(location.search).get('q') ?? '';
+    input.value = initial;
+
+    fetch('/search-index.json')
+      .then((r) => r.json())
+      .then((data: PaperIndexEntry[]) => {
+        index = data;
+        run(input.value);
+      });
+
+    let timer: number | undefined;
+    input.addEventListener('input', () => {
+      clearTimeout(timer);
+      timer = window.setTimeout(() => {
+        const url = new URL(location.href);
+        if (input.value) url.searchParams.set('q', input.value);
+        else url.searchParams.delete('q');
+        history.replaceState(null, '', url);
+        run(input.value);
+      }, 150);
+    });
+    input.form?.addEventListener('submit', (e) => {
+      e.preventDefault();
+      run(input.value);
+    });
+  });
+</script>
+
+<style>
+  .search-page__form {
+    max-width: 30rem;
+    margin-inline: auto;
+  }
+  .search-page__suggest {
+    --cluster-space: var(--space-2);
+  }
+  .search-page__status {
+    margin-block-end: var(--space-3);
+    color: var(--color-ink-muted);
+    font-family: var(--font-display);
+    font-style: italic;
+    text-align: center;
+  }
+</style>

@@ -1,0 +1,53 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import { allPapers } from '@/lib/papers';
+const slugs = allPapers.map((p) => p.slug);
+---
+
+<BaseLayout title="Random paper" description="Teleporting you to a random ridiculous research paper." noindex>
+  <div class="container--narrow random">
+    <p class="hand random__dice" aria-hidden="true">⚄</p>
+    <h1>Picking a paper…</h1>
+    <p class="lede">Shuffling through the collection for you. Hold on to your lab coat.</p>
+    <noscript>
+      <p>Random needs JavaScript. Here’s one anyway: <a href={`/papers/${slugs[0]}/`}>{allPapers[0]!.title}</a></p>
+    </noscript>
+  </div>
+  <script type="application/json" id="random-slugs" set:html={JSON.stringify(slugs)} />
+</BaseLayout>
+
+<script>
+  import { navigate } from 'astro:transitions/client';
+
+  document.addEventListener('astro:page-load', () => {
+    const data = document.getElementById('random-slugs');
+    if (!data) return;
+    const slugs: string[] = JSON.parse(data.textContent ?? '[]');
+    // Avoid sending people back to the paper they just came from.
+    const from = sessionStorage.getItem('lmr:from') ?? (document.referrer ? new URL(document.referrer).pathname : '');
+    const pool = slugs.filter((s) => !from.includes(s));
+    const pick = pool[Math.floor(Math.random() * pool.length)];
+    if (pick) navigate(`/papers/${pick}/`, { history: 'replace' });
+  });
+</script>
+
+<style>
+  .random {
+    padding-block: var(--space-9);
+    text-align: center;
+  }
+  .random__dice {
+    font-size: 5rem;
+    animation: roll 0.6s linear infinite;
+  }
+  @keyframes roll {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .random__dice {
+      animation: none;
+    }
+  }
+</style>

@@ -1,0 +1,14 @@
+---
+interface Props {
+  year: number;
+  category: string;
+  small?: boolean;
+}
+const { year, category, small = false } = Astro.props;
+---
+
+<span class:list={['stamp', { 'stamp--small': small }]} title={`Winner of the ${year} Ig Nobel Prize in ${category}`}>
+  <span class="stamp__top">Ig Nobel</span>
+  <span class="stamp__year">{year}</span>
+  {!small && <span class="stamp__cat">{category}</span>}
+</span>

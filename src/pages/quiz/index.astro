@@ -1,0 +1,229 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import Breadcrumbs from '@/components/Breadcrumbs.astro';
+import Note from '@/components/Note.astro';
+import { quizQuestions } from '@/data/quiz';
+import { allPapers } from '@/lib/papers';
+
+const candidates = allPapers.map((p) => ({ slug: p.slug, traits: p.traits }));
+---
+
+<BaseLayout
+  title="Which ridiculous research paper are you? (Personality test)"
+  description="Answer seven very scientific questions and find out which real, hilarious research paper matches your personality. Get a shareable certificate with your name on it."
+>
+  <div class="container--narrow quiz">
+    <Breadcrumbs items={[{ name: 'Home', href: '/' }, { name: 'Personality test' }]} />
+
+    <section class="quiz__screen" data-screen="intro">
+      <h1 class="quiz__title">Which ridiculous research paper <em>are you?</em></h1>
+      <p class="lede">
+        {quizQuestions.length} cosy questions. No wrong answers. One real research paper that is, statistically speaking, you.
+      </p>
+      <button type="button" class="btn btn--lg" data-start>Begin the experiment</button>
+      <Note tilt="right" class="quiz__note">takes 1 minute, and nothing leaves your browser ♡</Note>
+      <noscript><p>This test needs JavaScript, sorry! Meanwhile, <a href="/papers/">browse the archive</a>.</p></noscript>
+    </section>
+
+    <section class="quiz__screen" data-screen="question" hidden aria-live="polite">
+      <div class="quiz__progress">
+        <span class="kicker" data-progress-label></span>
+        <div class="quiz__bar" role="progressbar" aria-valuemin="0" aria-valuemax={quizQuestions.length} data-bar>
+          <span class="quiz__bar-fill" data-bar-fill></span>
+        </div>
+      </div>
+      <fieldset class="quiz__fieldset">
+        <legend class="quiz__question" data-question tabindex="-1"></legend>
+        <div class="quiz__answers" data-answers></div>
+      </fieldset>
+      <button type="button" class="btn btn--ghost btn--sm" data-back>← Back</button>
+    </section>
+
+    <section class="quiz__screen" data-screen="name" hidden>
+      <p class="kicker">Experiment complete!</p>
+      <h2 class="quiz__title" tabindex="-1" data-name-heading>Who should we put on the certificate?</h2>
+      <form class="stack" data-name-form>
+        <label for="quiz-name" class="kicker">Your name (optional, it’s just for the certificate)</label>
+        <input id="quiz-name" name="name" class="input" maxlength="40" autocomplete="given-name" placeholder="e.g. Dr. Snacks, PhD" />
+        <div class="cluster">
+          <button type="submit" class="btn btn--lg">Reveal my paper</button>
+          <button type="button" class="btn btn--ghost" data-back>← Back</button>
+        </div>
+      </form>
+    </section>
+  </div>
+
+  <script type="application/json" id="quiz-data" set:html={JSON.stringify({ questions: quizQuestions, candidates })} />
+</BaseLayout>
+
+<script>
+  import type { QuizQuestion } from '@/data/quiz';
+  import { scoreAnswers, matchPaper, dominantTrait, sanitizeName, type Matchable } from '@/lib/quiz';
+  import { resultUrl } from '@/lib/text';
+  import { escapeHtml } from '@/scripts/render';
+  import { navigate } from 'astro:transitions/client';
+
+  document.addEventListener('astro:page-load', () => {
+    const dataEl = document.getElementById('quiz-data');
+    if (!dataEl || dataEl.dataset.bound) return;
+    dataEl.dataset.bound = 'true';
+    const { questions, candidates } = JSON.parse(dataEl.textContent!) as {
+      questions: QuizQuestion[];
+      candidates: Matchable[];
+    };
+    const screens = document.querySelectorAll<HTMLElement>('[data-screen]');
+    const $ = <T extends HTMLElement>(sel: string) => document.querySelector<T>(sel)!;
+    const choices: number[] = [];
+    let current = 0;
+
+    const show = (name: string) => {
+      screens.forEach((s) => (s.hidden = s.dataset.screen !== name));
+    };
+
+    const renderQuestion = () => {
+      const q = questions[current]!;
+      show('question');
+      $('[data-progress-label]').textContent = `Question ${current + 1} of ${questions.length}`;
+      $('[data-bar]').setAttribute('aria-valuenow', String(current));
+      $('[data-bar-fill]').style.width = `${(current / questions.length) * 100}%`;
+      const legend = $('[data-question]');
+      legend.textContent = q.question;
+      $('[data-answers]').innerHTML = q.answers
+        .map(
+          (a, i) =>
+            `<button type="button" class="quiz__answer${choices[current] === i ? ' is-selected' : ''}" data-answer="${i}">
+              <span class="quiz__answer-key" aria-hidden="true">${'ABCD'[i]}</span><span>${escapeHtml(a.label)}</span>
+            </button>`,
+        )
+        .join('');
+      legend.focus();
+    };
+
+    $('[data-start]').addEventListener('click', () => {
+      current = 0;
+      renderQuestion();
+    });
+
+    $('[data-answers]').addEventListener('click', (e) => {
+      const btn = (e.target as HTMLElement).closest<HTMLButtonElement>('[data-answer]');
+      if (!btn) return;
+      choices[current] = Number(btn.dataset.answer);
+      btn.classList.add('is-selected');
+      setTimeout(() => {
+        current++;
+        if (current < questions.length) renderQuestion();
+        else {
+          show('name');
+          $('[data-name-heading]').focus();
+        }
+      }, 180);
+    });
+
+    document.querySelectorAll('[data-back]').forEach((b) =>
+      b.addEventListener('click', () => {
+        if (current === 0) return show('intro');
+        current = Math.min(current, questions.length) - 1;
+        renderQuestion();
+      }),
+    );
+
+    $<HTMLFormElement>('[data-name-form]').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const name = sanitizeName($<HTMLInputElement>('#quiz-name').value);
+      const profile = scoreAnswers(questions, choices);
+      const paper = matchPaper(profile, candidates, name);
+      navigate(resultUrl(location.origin, { slug: paper.slug, name, trait: dominantTrait(profile) }));
+    });
+  });
+</script>
+
+<style>
+  .quiz {
+    padding-block: var(--space-6) var(--space-8);
+    min-height: 60vh;
+  }
+  .quiz__screen {
+    margin-block-start: var(--space-6);
+  }
+  .quiz__screen > * + * {
+    margin-block-start: var(--space-5);
+  }
+  .quiz__title {
+    font-size: var(--text-3xl);
+    line-height: 1.08;
+  }
+  /* The note is rendered by <Note>, so it needs :global to receive this spacing. */
+  :global(.quiz__note) {
+    margin-block-start: var(--space-6);
+    transform-origin: top left;
+  }
+  .quiz__progress {
+    display: grid;
+    gap: var(--space-2);
+    font-size: var(--text-xs);
+  }
+  .quiz__bar {
+    height: 2px;
+    background: var(--color-rule);
+  }
+  .quiz__bar-fill {
+    display: block;
+    height: 100%;
+    background: var(--color-ink);
+    transition: width var(--duration-base) ease;
+  }
+  .quiz__fieldset {
+    border: 0;
+    padding: 0;
+  }
+  .quiz__question {
+    font-family: var(--font-display);
+    font-variation-settings: var(--display-soft);
+    font-size: var(--text-3xl);
+    line-height: var(--leading-tight);
+    margin-block-end: var(--space-5);
+  }
+  .quiz__question:focus {
+    outline: none;
+  }
+  .quiz__answers {
+    display: grid;
+    gap: var(--space-3);
+  }
+  .quiz__answers :global(.quiz__answer) {
+    display: flex;
+    align-items: center;
+    gap: var(--space-4);
+    width: 100%;
+    padding: var(--space-4);
+    text-align: left;
+    background: transparent;
+    border: var(--border-hair);
+    border-radius: var(--radius-md);
+    font-size: var(--text-lg);
+    cursor: pointer;
+    transition:
+      border-color var(--duration-fast),
+      transform var(--duration-base) var(--ease-out);
+  }
+  .quiz__answers :global(.quiz__answer:hover) {
+    border-color: var(--color-ink);
+    transform: rotate(-0.6deg);
+  }
+  .quiz__answers :global(.quiz__answer.is-selected) {
+    background: var(--color-ink);
+    color: var(--color-paper);
+  }
+  .quiz__answers :global(.quiz__answer-key) {
+    display: grid;
+    place-items: center;
+    flex: none;
+    width: 2rem;
+    height: 2rem;
+    border: 1px solid currentColor;
+    border-radius: 50%;
+    font-family: var(--font-display);
+    font-style: italic;
+    font-size: var(--text-sm);
+  }
+</style>

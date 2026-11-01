@@ -1,0 +1,18 @@
+---
+import type { Topic } from '@/data/types';
+import { topicPath } from '@/lib/papers';
+interface Props {
+  topic: Topic;
+  count: number;
+}
+const { topic, count } = Astro.props;
+---
+
+<a href={topicPath(topic)} class="element-tile">
+  <span class="element-tile__top">
+    <span aria-hidden="true">{topic.number}</span>
+    <span>{count}<span class="visually-hidden"> papers</span></span>
+  </span>
+  <span class="element-tile__symbol" aria-hidden="true">{topic.symbol}</span>
+  <span class="element-tile__name">{topic.name}</span>
+</a>

@@ -1,0 +1,17 @@
+---
+import type { Paper } from '@/data/types';
+import PaperEntry from './PaperEntry.astro';
+
+interface Props {
+  papers: readonly Paper[];
+  headingLevel?: 'h2' | 'h3';
+  /** Lay stories out in magazine columns. */
+  columns?: boolean;
+  hideTopic?: string;
+}
+const { papers, headingLevel, columns = false, hideTopic } = Astro.props;
+---
+
+<ol class:list={['entries', { 'entries--grid': columns }]} role="list">
+  {papers.map((p) => <li><PaperEntry paper={p} headingLevel={headingLevel} hideTopic={hideTopic} /></li>)}
+</ol>

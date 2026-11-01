@@ -1,0 +1,47 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import TopicTile from '@/components/TopicTile.astro';
+import Breadcrumbs from '@/components/Breadcrumbs.astro';
+import { allTopics, papersByTopic, topicPath } from '@/lib/papers';
+---
+
+<BaseLayout
+  title="Browse funny research papers by topic"
+  description="Medicine, physics, animals, psychology, tech, food and pop culture: the most delightful real research papers, sorted into a tiny periodic table."
+>
+  <div class="container">
+    <header class="page-header">
+      <Breadcrumbs items={[{ name: 'Home', href: '/' }, { name: 'Topics' }]} />
+      <h1 class="headline">A tiny periodic table of curiosities</h1>
+      <p class="lede">Seven elements, each full of wonderfully curious science. Pick one that sparks joy.</p>
+    </header>
+    <div class="element-grid topics__tiles">
+      {allTopics.map((t) => <TopicTile topic={t} count={papersByTopic(t.slug).length} />)}
+    </div>
+    <ul class="departments topics__list" role="list">
+      {
+        allTopics.map((t) => (
+          <li class="department">
+            <span class="department__symbol" aria-hidden="true">{t.symbol}</span>
+            <div>
+              <a href={topicPath(t)} class="department__name">{t.name}</a>
+              <span class="department__count">{papersByTopic(t.slug).length}</span>
+              <p class="department__tagline">{t.description}</p>
+            </div>
+          </li>
+        ))
+      }
+    </ul>
+  </div>
+</BaseLayout>
+
+<style>
+  @media (min-width: 56rem) {
+    .topics__tiles {
+      grid-template-columns: repeat(7, 1fr);
+    }
+  }
+  .topics__list {
+    margin-block-start: var(--space-8);
+  }
+</style>

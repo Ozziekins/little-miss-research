@@ -1,0 +1,70 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import Breadcrumbs from '@/components/Breadcrumbs.astro';
+import Note from '@/components/Note.astro';
+import { allPapers, igNobelCount } from '@/lib/papers';
+---
+
+<BaseLayout
+  title="About: how we pick the funniest research papers"
+  description="Little Miss Research collects real, published research papers that are hilarious, and explains them in plain English. Here's how we choose them."
+>
+  <div class="container--narrow">
+    <header class="page-header">
+      <Breadcrumbs items={[{ name: 'Home', href: '/' }, { name: 'About' }]} />
+      
+      <h1 class="headline">About this little paper</h1>
+    </header>
+
+    <div class="prose about">
+      <p class="lede">
+        Science is mostly careful, slow, brilliant work. And sometimes it’s a physicist wondering whether a cat is a liquid.
+        This is a love letter to those papers, and to the curious people who write them.
+      </p>
+
+      <h2>What’s in here?</h2>
+      <p>
+        {allPapers.length} real research papers (and a couple of official internet standards) that made us laugh, explained
+        in normal-person language. {igNobelCount} of them won an <a href="https://improbable.com/ig/">Ig Nobel Prize</a>,
+        the award for research that “makes people laugh, then think”.
+      </p>
+
+      <h2>How we pick</h2>
+      <ol>
+        <li><strong>It has to be real.</strong> Published in a journal, presented at a conference or issued as an official standard. No made-up papers, ever.</li>
+        <li><strong>It has to be funny.</strong> Funny title, funny question, funny method, or a funny result. Bonus points for all four.</li>
+        <li><strong>We laugh with researchers.</strong> Never at anyone. Science is better with a giggle.</li>
+        <li><strong>It should teach you something.</strong> Most of these papers are secretly very clever. We try to explain why.</li>
+      </ol>
+
+      <h2>The silliness scale</h2>
+      <p>Every paper gets a rating from 1 (mildly amusing) to 5 (pure delight). This scale is not peer-reviewed. It runs entirely on vibes.</p>
+
+      <h2>Can I read the original papers?</h2>
+      <p>
+        Yes, please do! Every page has a “find the original paper” button. Our summaries are simplified on purpose, so
+        if you’re citing something, cite the real paper and not us.
+      </p>
+
+      <h2>Spotted a mistake?</h2>
+      <p>
+        We try very hard to get the facts right, but we’re only human (Chester the cat was unavailable for review). If
+        something’s off, let us know and we’ll fix it.
+      </p>
+      <Note tilt="right">thank you for being a nerd with us ♡</Note>
+    </div>
+  </div>
+</BaseLayout>
+
+<style>
+  .about h2 {
+    font-size: var(--text-2xl);
+    margin-block-start: var(--space-6);
+  }
+  .about ol {
+    padding-inline-start: 1.2em;
+  }
+  .about li + li {
+    margin-block-start: var(--space-2);
+  }
+</style>

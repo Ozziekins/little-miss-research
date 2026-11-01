@@ -1,0 +1,43 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import PaperList from '@/components/PaperList.astro';
+import Breadcrumbs from '@/components/Breadcrumbs.astro';
+import { allPapers } from '@/lib/papers';
+import { breadcrumbJsonLd } from '@/lib/seo';
+
+// Newest prize first.
+const winners = allPapers.filter((p) => p.igNobel).sort((a, b) => b.igNobel!.year - a.igNobel!.year);
+const site = Astro.site!;
+---
+
+<BaseLayout
+  title="Ig Nobel Prize winners, explained"
+  description={`${winners.length} Ig Nobel Prize-winning research papers explained in plain English: liquid cats, square wombat science, roller coasters for kidney stones and more.`}
+  jsonLd={[
+    breadcrumbJsonLd([
+      { name: 'Home', url: new URL('/', site).href },
+      { name: 'Ig Nobel winners', url: new URL('/ig-nobel/', site).href },
+    ]),
+  ]}
+>
+  <div class="container">
+    <header class="page-header">
+      <Breadcrumbs items={[{ name: 'Home', href: '/' }, { name: 'Ig Nobel winners' }]} />
+      <h1 class="headline">Ig Nobel winners</h1>
+      <p class="deck">research that makes you laugh, then think · {winners.length} prize winners, newest first</p>
+      <p class="lede ig__intro">
+        The Ig Nobel Prizes are handed out every year at Harvard (with real Nobel laureates in attendance) for real
+        research that first makes people laugh, and then makes them think. Here is every winner in our collection,
+        explained without the jargon.
+      </p>
+    </header>
+    <PaperList papers={winners} columns />
+  </div>
+</BaseLayout>
+
+<style>
+  .ig__intro {
+    max-width: 60ch;
+    margin-block-start: var(--space-4);
+  }
+</style>

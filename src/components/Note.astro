@@ -1,0 +1,10 @@
+---
+/** A handwritten margin annotation. */
+interface Props {
+  tilt?: 'left' | 'right';
+  class?: string;
+}
+const { tilt = 'left', class: className } = Astro.props;
+---
+
+<p class:list={['note', `note--${tilt}`, className]}><slot /></p>

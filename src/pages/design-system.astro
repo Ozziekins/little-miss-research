@@ -1,0 +1,215 @@
+---
+/**
+ * Living style guide. Not linked from nav and noindex'd; it's for whoever
+ * builds on this site. If you add a component, add it here too.
+ */
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import Logo from '@/components/Logo.astro';
+import Button from '@/components/Button.astro';
+import PaperList from '@/components/PaperList.astro';
+import TopicChip from '@/components/TopicChip.astro';
+import TopicTile from '@/components/TopicTile.astro';
+import SillyMeter from '@/components/SillyMeter.astro';
+import IgNobelStamp from '@/components/IgNobelStamp.astro';
+import SearchForm from '@/components/SearchForm.astro';
+import Note from '@/components/Note.astro';
+import Breadcrumbs from '@/components/Breadcrumbs.astro';
+import { allPapers, allTopics } from '@/lib/papers';
+import Doodle from '@/components/Doodle.astro';
+import { DOODLES } from '@/lib/doodles';
+
+const grays = ['0', '50', '100', '200', '300', '400', '500', '600', '700', '800', '900'];
+const semantic = ['paper', 'paper-raised', 'paper-sunken', 'ink', 'ink-soft', 'ink-muted', 'rule', 'highlight'];
+const sizes = ['xs', 'sm', 'base', 'lg', 'xl', '2xl', '3xl'];
+const spaces = [1, 2, 3, 4, 5, 6, 7, 8, 9];
+const sample = allPapers.slice(0, 3);
+---
+
+<BaseLayout title="Design system" description="The Little Miss Research design system." noindex>
+  <div class="container ds">
+    <header class="page-header">
+      <p class="kicker">Internal · v0.4</p>
+      <h1>Design system</h1>
+      <p class="lede">
+        Little Miss’s research journal: calm, kind, a bit doodly. Tokens live in <code>src/styles/tokens.css</code>, components in
+        <code>src/components</code> + <code>src/styles/components.css</code>.
+      </p>
+    </header>
+
+    <section class="ds__section">
+      <h2 class="section-title"><span>Principles</span></h2>
+      <ol class="ds__principles">
+        <li><strong>One catchy thing per screen.</strong> The homepage is a single question. Lots of air everywhere.</li>
+        <li><strong>Articles are Little Miss’s journal.</strong> A proper article, plus pastel highlights, “new word!” notes, margin scribbles and topic doodles.</li>
+        <li><strong>Newsprint &amp; notebook.</strong> Greige ruled paper in a thin ink frame; mustard buttons; red section numbers; one pastel per topic.</li>
+        <li><strong>Three voices:</strong> Fraunces (soft &amp; wonky) for headlines and UI, Newsreader for reading, Gaegu for handwritten asides. Mono only for citations.</li>
+        <li><strong>Cute, never crude.</strong> Copy is warm and kind; we laugh with researchers, never at anyone.</li>
+        <li><strong>Personality in small doses.</strong> At most one handwritten note per page; stamps only on paper pages.</li>
+        <li><strong>Accessible by default.</strong> 44px targets, visible dashed focus, AA contrast, reduced-motion respected.</li>
+      </ol>
+    </section>
+
+    <section class="ds__section">
+      <h2 class="section-title"><span>Journal marks (pastels, used sparingly)</span></h2>
+      <p>
+        <mark class="hl">yellow highlight</mark> · <mark class="hl hl--pink">pink</mark> ·
+        <mark class="hl hl--mint">mint</mark> · <mark class="hl hl--sky">sky</mark> · <mark class="hl hl--lilac">lilac</mark>
+      </p>
+      <p>A <dfn class="vocab" title="the science of how things flow">new word</dfn> gets a wavy lilac underline and a margin note.</p>
+      <p class="hand">Gaegu scribbles live in the margins ♡</p>
+    </section>
+
+    <section class="ds__section">
+      <h2 class="section-title"><span>Newspaper bits</span></h2>
+      <h3 class="headline" style="font-size: var(--text-2xl)"><span class="section-num">01</span>Section headline</h3>
+      <p class="deck">A handwritten deck under it.</p>
+      <p class="label">Tiny tracked label</p>
+      <div class="cluster">
+        {allTopics.map((t) => <TopicChip topic={t} />)}
+        <a class="icon-btn" href="#" aria-label="Icon button" data-label="hello!">✦</a>
+      </div>
+    </section>
+
+    <section class="ds__section">
+      <h2 class="section-title"><span>Doodles</span></h2>
+      <div class="ds__doodles">
+        {DOODLES.map((d, i) => (
+          <figure>
+            <Doodle name={d} tint={(['yellow', 'pink', 'mint', 'sky', 'lilac'] as const)[i % 5]} size={56} />
+            <figcaption><code>{d}</code></figcaption>
+          </figure>
+        ))}
+      </div>
+    </section>
+
+    <section class="ds__section">
+      <h2 class="section-title"><span>Logo</span></h2>
+      <div class="cluster"><Logo /><Logo size="lg" asLink={false} /></div>
+    </section>
+
+    <section class="ds__section">
+      <h2 class="section-title"><span>Colour</span></h2>
+      <div class="ds__swatches">
+        {grays.map((g) => <div class="ds__swatch"><span style={`background: var(--gray-${g})`} /><code>--gray-{g}</code></div>)}
+      </div>
+      <div class="ds__swatches">
+        {semantic.map((s) => <div class="ds__swatch"><span style={`background: var(--color-${s})`} /><code>--color-{s}</code></div>)}
+      </div>
+    </section>
+
+    <section class="ds__section">
+      <h2 class="section-title"><span>Type</span></h2>
+      <p class="display">Display <em>italic</em></p>
+      {sizes.map((s) => <h3 style={`font-size: var(--text-${s}); line-height: 1.2`}><code class="ds__label">--text-{s}</code> The rheology of cats</h3>)}
+      <p class="kicker">Kicker: Fraunces italic</p>
+      <p class="lede">Standfirst / lede: Newsreader italic</p>
+      <p class="mono">IBM Plex Mono: citations only</p>
+      <p class="hand">Gaegu: margin notes &amp; the logo</p>
+      <span class="ornament" aria-hidden="true"></span>
+      <p>Body with a <span class="highlight">highlighted phrase</span> and a <a href="#">link</a>.</p>
+    </section>
+
+    <section class="ds__section">
+      <h2 class="section-title"><span>Space</span></h2>
+      {spaces.map((n) => <div class="ds__space"><code class="ds__label">--space-{n}</code><span style={`width: var(--space-${n})`} /></div>)}
+    </section>
+
+    <section class="ds__section">
+      <h2 class="section-title"><span>Buttons</span></h2>
+      <div class="cluster">
+        <Button>Primary</Button>
+        <Button variant="secondary">Secondary</Button>
+        <Button variant="ghost">Ghost</Button>
+        <Button size="sm">Small</Button>
+        <Button size="lg">Large</Button>
+        <Button disabled>Disabled</Button>
+      </div>
+    </section>
+
+    <section class="ds__section">
+      <h2 class="section-title"><span>Tags, meters, stamps, notes</span></h2>
+      <div class="cluster">{allTopics.map((t) => <TopicChip topic={t} />)}</div>
+      <div class="cluster ds__row">{[1, 2, 3, 4, 5].map((n) => <SillyMeter level={n} />)}</div>
+      <div class="cluster ds__row">
+        <IgNobelStamp year={2017} category="Physics" />
+        <IgNobelStamp year={2017} category="Physics" small />
+        <Note>a handwritten note</Note>
+        <Note tilt="right">tilted the other way</Note>
+      </div>
+    </section>
+
+    <section class="ds__section">
+      <h2 class="section-title"><span>Navigation &amp; forms</span></h2>
+      <Breadcrumbs items={[{ name: 'Home', href: '/' }, { name: 'Topics', href: '/topics/' }, { name: 'Physics' }]} />
+      <div class="ds__row" style="max-width: 30rem"><SearchForm id="ds-search" /></div>
+    </section>
+
+    <section class="ds__section">
+      <h2 class="section-title"><span>Paper list (entries)</span></h2>
+      <PaperList papers={sample} columns />
+    </section>
+
+    <section class="ds__section">
+      <h2 class="section-title"><span>Element tiles</span><a href="/topics/">Section link →</a></h2>
+      <div class="element-grid">{allTopics.map((t) => <TopicTile topic={t} count={9} />)}</div>
+      <p><a class="arrow-link" href="#">Arrow link →</a></p>
+    </section>
+  </div>
+</BaseLayout>
+
+<style>
+  .ds__section {
+    margin-block: var(--space-8);
+  }
+  .ds__section > * + * {
+    margin-block-start: var(--space-4);
+  }
+  .ds__doodles {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(6rem, 1fr));
+    gap: var(--space-4);
+    text-align: center;
+    font-size: var(--text-xs);
+  }
+  .ds__doodles figure {
+    display: grid;
+    justify-items: center;
+    gap: var(--space-2);
+    margin: 0;
+  }
+  .ds__principles {
+    padding-inline-start: 1.2em;
+  }
+  .ds__swatches {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(8rem, 1fr));
+    gap: var(--space-3);
+  }
+  .ds__swatch {
+    display: grid;
+    gap: var(--space-1);
+    font-size: var(--text-xs);
+  }
+  .ds__swatch span {
+    height: 4rem;
+    border: var(--border-ink);
+  }
+  .ds__label {
+    display: inline-block;
+    min-width: 8rem;
+    font-size: var(--text-xs);
+    color: var(--color-ink-muted);
+  }
+  .ds__space {
+    display: flex;
+    align-items: center;
+  }
+  .ds__space span {
+    display: block;
+    height: 1rem;
+    background: var(--color-ink);
+  }
+  .ds__row {
+    margin-block-start: var(--space-5);
+  }
+</style>

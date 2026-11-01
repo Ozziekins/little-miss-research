@@ -1,0 +1,165 @@
+---
+/**
+ * The homepage is one catchy thing: a real question science actually asked.
+ * It starts on today's paper; "ask me another" shuffles through the rest.
+ */
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import Doodle from '@/components/Doodle.astro';
+import { allPapers, getAnnotation, paperPath } from '@/lib/papers';
+import { pickForDay } from '@/lib/daily';
+
+const deck = allPapers.map((p) => ({ q: getAnnotation(p.slug)?.question ?? p.title, slug: p.slug, tldr: p.tldr }));
+const today = pickForDay(deck, new Date());
+---
+
+<BaseLayout>
+  <section class="hello">
+    <h1 class="visually-hidden">Little Miss Research: the funniest real research papers, explained simply</h1>
+
+    <Doodle name="atom" tint="sky" size={70} rotate={-12} class="hello__doodle hello__doodle--1" />
+    <Doodle name="flask" tint="mint" size={64} rotate={10} class="hello__doodle hello__doodle--2" />
+    <Doodle name="paw" tint="pink" size={54} rotate={-8} class="hello__doodle hello__doodle--3" />
+    <Doodle name="coffee" tint="yellow" size={60} rotate={6} class="hello__doodle hello__doodle--4" />
+    <Doodle name="formula" tint="lilac" size={88} rotate={-6} class="hello__doodle hello__doodle--5" />
+
+    <p class="hello__kicker">Real scientists once asked…</p>
+    <p class="hello__question" aria-live="polite">
+      <a href={paperPath(today)} data-q-link><span data-q>{today.q}</span></a>
+    </p>
+    <svg class="hello__squiggle" viewBox="0 0 300 16" aria-hidden="true" preserveAspectRatio="none">
+      <path d="M4 10 Q 40 2 78 9 T 152 9 T 226 8 T 296 7" fill="none" stroke="var(--pastel-pink)" stroke-width="7" stroke-linecap="round"></path>
+    </svg>
+    <p class="hello__answer" data-q-tldr>{today.tldr}</p>
+
+    <div class="hello__actions">
+      <a class="btn btn--lg" href={paperPath(today)} data-q-find>Find out the answer</a>
+      <button type="button" class="btn btn--lg btn--secondary" data-q-next>Ask me another ↻</button>
+    </div>
+
+    <p class="hello__more">
+      <a href="/quiz/">Which paper are you?</a>
+      <span aria-hidden="true">·</span>
+      <a href="/papers/">Browse all {allPapers.length}</a>
+    </p>
+  </section>
+  <script type="application/json" id="deck" set:html={JSON.stringify(deck)} />
+</BaseLayout>
+
+<script>
+  type Card = { q: string; slug: string; tldr: string };
+
+  document.addEventListener('astro:page-load', () => {
+    const deckEl = document.getElementById('deck');
+    if (!deckEl || deckEl.dataset.bound) return;
+    deckEl.dataset.bound = 'true';
+    const deck: Card[] = JSON.parse(deckEl.textContent ?? '[]');
+    const q = document.querySelector<HTMLElement>('[data-q]')!;
+    const qLink = document.querySelector<HTMLAnchorElement>('[data-q-link]')!;
+    const tldr = document.querySelector<HTMLElement>('[data-q-tldr]')!;
+    const find = document.querySelector<HTMLAnchorElement>('[data-q-find]')!;
+    const next = document.querySelector<HTMLButtonElement>('[data-q-next]')!;
+
+    // Shuffle once, then walk through so nothing repeats until the deck is done.
+    const order = deck.map((_, i) => i).sort(() => Math.random() - 0.5);
+    let pos = 0;
+
+    next.addEventListener('click', () => {
+      let card = deck[order[pos++ % order.length]!]!;
+      if (card.q === q.textContent) card = deck[order[pos++ % order.length]!]!;
+      const show = () => {
+        q.textContent = card.q;
+        tldr.textContent = card.tldr;
+        qLink.href = find.href = `/papers/${card.slug}/`;
+      };
+      if (!document.startViewTransition || matchMedia('(prefers-reduced-motion: reduce)').matches) show();
+      else document.startViewTransition(show);
+    });
+  });
+</script>
+
+<style>
+  .hello {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: calc(100dvh - 12rem);
+    max-width: 44rem;
+    margin-inline: auto;
+    padding: var(--space-7) var(--gutter);
+    text-align: center;
+  }
+  .hello__kicker {
+    font-family: var(--font-hand);
+    font-weight: 700;
+    font-size: var(--text-hand);
+    color: var(--color-ink-muted);
+    transform: rotate(-2deg);
+  }
+  .hello__question {
+    margin-block-start: var(--space-3);
+    font-family: var(--font-display);
+    font-variation-settings: var(--display-soft);
+    font-size: var(--text-display);
+    font-weight: 400;
+    line-height: 1.08;
+    letter-spacing: -0.02em;
+    text-wrap: balance;
+    view-transition-name: question;
+  }
+  .hello__question a {
+    text-decoration: none;
+  }
+  .hello__squiggle {
+    width: min(18rem, 70%);
+    height: 0.9rem;
+    margin-block-start: var(--space-2);
+  }
+  .hello__answer {
+    max-width: 34ch;
+    margin-block-start: var(--space-4);
+    color: var(--color-ink-muted);
+    font-style: italic;
+    view-transition-name: answer;
+  }
+  .hello__actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: var(--space-3);
+    margin-block-start: var(--space-6);
+  }
+  .hello__more {
+    display: flex;
+    gap: var(--space-3);
+    margin-block-start: var(--space-6);
+    font-family: var(--font-display);
+    font-style: italic;
+    font-size: var(--text-sm);
+    color: var(--color-ink-muted);
+  }
+  .hello__more a {
+    text-decoration-color: var(--color-rule);
+    text-underline-offset: 0.25em;
+  }
+  .hello :global(.hello__doodle) {
+    position: absolute;
+    opacity: 0.85;
+    pointer-events: none;
+  }
+  .hello :global(.hello__doodle--1) { top: 8%; left: -6%; }
+  .hello :global(.hello__doodle--2) { top: 12%; right: -4%; }
+  .hello :global(.hello__doodle--3) { bottom: 14%; left: 2%; }
+  .hello :global(.hello__doodle--4) { bottom: 10%; right: 0%; }
+  .hello :global(.hello__doodle--5) { top: -2%; left: 38%; }
+  @media (max-width: 52rem) {
+    .hello :global(.hello__doodle--1),
+    .hello :global(.hello__doodle--4),
+    .hello :global(.hello__doodle--5) {
+      display: none;
+    }
+    .hello :global(.hello__doodle--2) { top: 2%; right: 4%; width: 44px; }
+    .hello :global(.hello__doodle--3) { bottom: 2%; left: 6%; width: 40px; }
+  }
+</style>

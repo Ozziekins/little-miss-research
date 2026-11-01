@@ -1,0 +1,69 @@
+---
+import Logo from './Logo.astro';
+
+const nav = [
+  { href: '/papers/', label: 'Papers' },
+  { href: '/topics/', label: 'Topics' },
+  { href: '/paper-of-the-day/', label: 'Today' },
+  { href: '/quiz/', label: 'Quiz' },
+];
+const path = Astro.url.pathname;
+const isCurrent = (href: string) => path.startsWith(href);
+---
+
+<header class="topbar">
+  <div class="container topbar__inner">
+    <Logo />
+    <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">
+      <span class="menu-toggle__icon" aria-hidden="true"></span>
+      <span class="menu-toggle__label">Menu</span>
+    </button>
+    <div class="topbar__right">
+      <nav id="site-nav" class="topbar__nav" aria-label="Main">
+        <ul class="topbar__list">
+          {
+            nav.map((item) => (
+              <li>
+                <a href={item.href} class="topbar__link" aria-current={isCurrent(item.href) ? 'page' : undefined}>
+                  {item.label}
+                </a>
+              </li>
+            ))
+          }
+          <li class="topbar__mobile-only"><a href="/search/" class="topbar__link">Search</a></li>
+        </ul>
+      </nav>
+      <div class="topbar__tools">
+        <button type="button" class="icon-btn music-btn" data-music aria-label="Background music" aria-pressed="true" data-label="music">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z" fill="var(--accent-mustard-soft)" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"></path>
+            <g class="music-btn__on" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round">
+              <path d="M15.5 9.5a3.5 3.5 0 0 1 0 5"></path>
+              <path d="M18 7a7 7 0 0 1 0 10"></path>
+            </g>
+            <g class="music-btn__off" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+              <path d="M15.5 9.5l5 5M20.5 9.5l-5 5"></path>
+            </g>
+          </svg>
+        </button>
+        <a href="/search/" class="icon-btn topbar__search" aria-label="Search" data-label="search" aria-current={isCurrent('/search/') ? 'page' : undefined}>
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <circle cx="10.5" cy="10.5" r="6" fill="none" stroke="currentColor" stroke-width="1.8"></circle>
+            <path d="M15 15l5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path>
+          </svg>
+        </a>
+        <a href="/random/" class="icon-btn" aria-label="Surprise me" data-label="surprise me!" rel="nofollow">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <rect x="3.5" y="3.5" width="17" height="17" rx="4" fill="var(--accent-mustard-soft)" stroke="currentColor" stroke-width="1.6"></rect>
+            <circle cx="8.5" cy="8.5" r="1.4" fill="currentColor"></circle>
+            <circle cx="15.5" cy="8.5" r="1.4" fill="currentColor"></circle>
+            <circle cx="12" cy="12" r="1.4" fill="currentColor"></circle>
+            <circle cx="8.5" cy="15.5" r="1.4" fill="currentColor"></circle>
+            <circle cx="15.5" cy="15.5" r="1.4" fill="currentColor"></circle>
+          </svg>
+        </a>
+      </div>
+    </div>
+  </div>
+</header>
+

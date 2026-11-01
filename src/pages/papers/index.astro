@@ -1,0 +1,61 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import PaperList from '@/components/PaperList.astro';
+import TopicChip from '@/components/TopicChip.astro';
+import Breadcrumbs from '@/components/Breadcrumbs.astro';
+import { allPapers, allTopics, igNobelCount, topicPath } from '@/lib/papers';
+
+// Group by primary topic so each paper appears once, newspaper-section style.
+const sections = allTopics.map((t) => ({ topic: t, papers: allPapers.filter((p) => p.topics[0] === t.slug) }));
+---
+
+<BaseLayout
+  title="All the funniest research papers"
+  description={`The complete collection: ${allPapers.length} real and delightful research papers, including ${igNobelCount} Ig Nobel Prize winners, explained in plain English.`}
+>
+  <div class="container">
+    <header class="page-header">
+      <Breadcrumbs items={[{ name: 'Home', href: '/' }, { name: 'Papers' }]} />
+      <h1 class="headline">All the papers</h1>
+      <p class="deck">{allPapers.length} real papers · <a href="/ig-nobel/">{igNobelCount} Ig Nobel winners</a> · zero jargon</p>
+      <nav class="cluster papers__jump" aria-label="Jump to a topic">
+        {sections.map(({ topic, papers }) => <TopicChip topic={topic} count={papers.length} href={`#${topic.slug}`} />)}
+      </nav>
+    </header>
+
+    {
+      sections.map(({ topic, papers }, i) => (
+        <section class="papers__section" id={topic.slug} aria-labelledby={`${topic.slug}-heading`}>
+          <div class="section-title">
+            <div>
+              <h2 id={`${topic.slug}-heading`} class="headline papers__heading">
+                <span class="section-num">{String(i + 1).padStart(2, '0')}</span>
+                {topic.name}
+              </h2>
+              <p class="deck">{topic.tagline}</p>
+            </div>
+            <a href={topicPath(topic)}>see all {topic.name.toLowerCase()} →</a>
+          </div>
+          <PaperList papers={papers} columns hideTopic={topic.slug} />
+        </section>
+      ))
+    }
+  </div>
+</BaseLayout>
+
+<style>
+  .papers__jump {
+    --cluster-space: var(--space-2);
+    padding-block-start: var(--space-3);
+  }
+  .papers__section {
+    margin-block-start: var(--space-8);
+    scroll-margin-top: var(--space-5);
+  }
+  .papers__heading {
+    font-size: var(--text-2xl);
+  }
+  .papers__section :global(.entries--grid > li) {
+    border-block-start: 0;
+  }
+</style>

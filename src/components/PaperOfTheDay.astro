@@ -1,0 +1,59 @@
+---
+/**
+ * Paper-of-the-day panel. Rendered at build time (so crawlers see real
+ * content), then refreshed in the browser for the visitor's actual date.
+ */
+import { allPapers, allTopics } from '@/lib/papers';
+import { toIndexEntry } from '@/lib/search';
+import { pickForDay, formatShortDate } from '@/lib/daily';
+import { featurePanel, type TopicLite } from '@/scripts/render';
+
+interface Props {
+  id?: string;
+  /** Handwritten aside in the margin. */
+  note?: string;
+}
+const { id = 'potd', note } = Astro.props;
+
+const index = allPapers.map(toIndexEntry);
+const topics: Record<string, TopicLite> = Object.fromEntries(
+  allTopics.map((t) => [t.slug, { slug: t.slug, name: t.name, symbol: t.symbol }]),
+);
+const now = new Date();
+const pick = pickForDay(index, now);
+const html = featurePanel(pick, topics, {
+  dateLabel: formatShortDate(now),
+  isoDate: now.toISOString().slice(0, 10),
+});
+---
+
+<article class="cover" id={id} aria-live="polite">
+  <div data-potd data-slug={pick.slug}><Fragment set:html={html} /></div>
+  {note && <p class="note cover__note" aria-hidden="true">{note}</p>}
+</article>
+<script type="application/json" id="potd-data" set:html={JSON.stringify({ index, topics })} />
+
+<script>
+  import { pickForDay, formatShortDate } from '@/lib/daily';
+  import { featurePanel, type TopicLite } from '@/scripts/render';
+  import type { PaperIndexEntry } from '@/lib/search';
+
+  document.addEventListener('astro:page-load', () => {
+    const el = document.querySelector<HTMLElement>('[data-potd]');
+    const dataEl = document.getElementById('potd-data');
+    if (el && dataEl) {
+      const { index, topics } = JSON.parse(dataEl.textContent ?? '{}') as {
+        index: PaperIndexEntry[];
+        topics: Record<string, TopicLite>;
+      };
+      const now = new Date();
+      const pick = pickForDay(index, now);
+      const isoDate = now.toISOString().slice(0, 10);
+      const time = el.querySelector('time');
+      if (pick.slug !== el.dataset.slug || time?.getAttribute('datetime') !== isoDate) {
+        el.innerHTML = featurePanel(pick, topics, { dateLabel: formatShortDate(now), isoDate });
+        el.dataset.slug = pick.slug;
+      }
+    }
+  });
+</script>

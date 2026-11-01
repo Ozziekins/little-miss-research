@@ -1,0 +1,35 @@
+---
+interface Props {
+  title: string;
+  text?: string;
+  url?: string;
+  label?: string;
+}
+const { title, text = '', url, label = 'Share this' } = Astro.props;
+---
+
+<button type="button" class="btn btn--secondary" data-share data-title={title} data-text={text} data-url={url}>
+  <span data-share-label>{label}</span>
+</button>
+
+<script>
+  import { shareOrCopy } from '@/scripts/share';
+  document.addEventListener('astro:page-load', () => {
+    document.querySelectorAll<HTMLButtonElement>('[data-share]:not([data-bound])').forEach((btn) => {
+      btn.dataset.bound = 'true';
+      btn.addEventListener('click', async () => {
+        const label = btn.querySelector('[data-share-label]')!;
+        const original = label.textContent;
+        const result = await shareOrCopy({
+          title: btn.dataset.title ?? document.title,
+          text: btn.dataset.text,
+          url: btn.dataset.url || location.href,
+        });
+        if (result === 'copied') {
+          label.textContent = 'Link copied ✓';
+          setTimeout(() => (label.textContent = original), 2000);
+        }
+      });
+    });
+  });
+</script>
