@@ -1,20 +1,16 @@
-import type { Paper, TraitVector } from './types';
-
-/** Trait shorthand: chaotic, cozy, brainy, gremlin, dramatic (0–3 each). */
-const t = (chaotic: number, cozy: number, brainy: number, gremlin: number, dramatic: number): TraitVector => ({
-  chaotic,
-  cozy,
-  brainy,
-  gremlin,
-  dramatic,
-});
+import type { Paper } from './types';
+import { t } from './traits';
+import { medicineAndPopCulturePapers } from './collections/medicine-and-pop-culture';
+import { psychologyAndTechPapers } from './collections/psychology-and-tech';
+import { foodAndPhysicsPapers } from './collections/food-and-physics';
+import { animalsAndMorePapers } from './collections/animals-and-more';
 
 /**
  * The archive. Every entry is a real, published paper (or an official RFC).
- * Curators: add new papers here. Keep the tone kind, keep the facts straight,
+ * Curators: add new papers here or in a file in ./collections/ (with its notes). Keep the tone kind, keep the facts straight,
  * and only add a DOI once you have checked it against the publisher.
  */
-export const papers: Paper[] = [
+const originals: Paper[] = [
   // ───────────────────────────── POP CULTURE ─────────────────────────────
   {
     slug: 'harry-potter-casts-a-spell-on-accident-prone-children',
@@ -1160,4 +1156,13 @@ export const papers: Paper[] = [
     traits: t(2, 1, 2, 3, 0),
     tags: ['rocks', 'licking', 'geology', 'fossils'],
   },
+];
+
+/** Everything on the site: the originals plus the themed collections in ./collections/. */
+export const papers: Paper[] = [
+  ...originals,
+  ...medicineAndPopCulturePapers,
+  ...psychologyAndTechPapers,
+  ...foodAndPhysicsPapers,
+  ...animalsAndMorePapers,
 ];

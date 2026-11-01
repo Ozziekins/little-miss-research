@@ -64,7 +64,7 @@ tests/e2e      Playwright
 
 ## Adding a paper
 
-Add an entry to `src/data/papers.ts` **and** its journal notes (question, highlights, words, scribble) to `src/data/annotations.ts`. The data-integrity tests check slugs, topics, trait ranges, etc.
+Papers live in `src/data/papers.ts` (the originals) and the themed files in `src/data/collections/`, each of which holds papers **and** their journal notes (question, highlights, words, scribble). Add a new paper to the file that fits its topic, with a `// source:` comment linking to where you verified it. The tests check slugs, topics, trait ranges, duplicate titles/DOIs, banned words, and that every highlight appears verbatim in the summary.
 
 House rules: **it must be real**, it must be charming, keep the copy kind and cute (not crude), and only fill in `doi` once
 verified against the publisher (otherwise we link to a Google Scholar search for the exact title).

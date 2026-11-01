@@ -1,3 +1,8 @@
+import { medicineAndPopCultureNotes } from './collections/medicine-and-pop-culture';
+import { psychologyAndTechNotes } from './collections/psychology-and-tech';
+import { foodAndPhysicsNotes } from './collections/food-and-physics';
+import { animalsAndMoreNotes } from './collections/animals-and-more';
+
 /**
  * Little Miss's journal notes for each paper.
  *
@@ -13,7 +18,7 @@ export interface Annotation {
   scribble?: string;
 }
 
-export const annotations: Record<string, Annotation> = {
+const originalNotes: Record<string, Annotation> = {
   'harry-potter-casts-a-spell-on-accident-prone-children': {
     question: 'Can a Harry Potter book keep kids out of hospital?',
     highlights: ['reading 700 pages of wizard drama instead of falling off things'],
@@ -369,4 +374,12 @@ export const annotations: Record<string, Annotation> = {
     highlights: ['Geologists often lick rocks in the field.'],
     scribble: 'tastes like science',
   },
+};
+
+export const annotations: Record<string, Annotation> = {
+  ...originalNotes,
+  ...medicineAndPopCultureNotes,
+  ...psychologyAndTechNotes,
+  ...foodAndPhysicsNotes,
+  ...animalsAndMoreNotes,
 };

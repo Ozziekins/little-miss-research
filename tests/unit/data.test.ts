@@ -37,6 +37,14 @@ describe('paper data integrity', () => {
     expect(Object.values(p.traits).some((v) => v > 0)).toBe(true);
     if (p.igNobel) expect(p.igNobel.year).toBeGreaterThanOrEqual(1991); // first Ig Nobels
     if (p.doi) expect(p.doi).toMatch(/^10\.\d{4,}\//);
+    // Cute, never crude.
+    const copy = [p.tldr, ...p.summary, p.verdict].join(' ');
+    expect(copy.match(/\b(poo|poop|fart|farts|nonsense|lol|stupid|dumb|idiot|gross|kindly)\b/i)?.[0]).toBeUndefined();
+  });
+
+  it('has no duplicate DOIs', () => {
+    const dois = papers.flatMap((p) => (p.doi ? [p.doi.toLowerCase()] : []));
+    expect(new Set(dois).size).toBe(dois.length);
   });
 });
 
